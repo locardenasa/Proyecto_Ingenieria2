@@ -19,5 +19,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('reportes_api.urls')),
+    path('api/', include('reportes_api.urls')),  # <- todos los endpoints empiezan con /api/
 ]
+
