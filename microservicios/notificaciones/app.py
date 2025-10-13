@@ -17,9 +17,9 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = 'lorenacardenasaguirre@gmail.com'  # ✅ NUEVO CORREO
-app.config['MAIL_PASSWORD'] = 'xrqs rebe nmag zwfq'  # ⚠️ REEMPLAZAR con contraseña de aplicación
-app.config['MAIL_DEFAULT_SENDER'] = 'lorenacardenasaguirre@gmail.com'  # ✅ NUEVO CORREO
+app.config['MAIL_USERNAME'] = 'lorenacardenasaguirre@gmail.com'  #  NUEVO CORREO
+app.config['MAIL_PASSWORD'] = 'xrqs rebe nmag zwfq'  #  REEMPLAZAR con contraseña de aplicación
+app.config['MAIL_DEFAULT_SENDER'] = 'lorenacardenasaguirre@gmail.com'  #  NUEVO CORREO
 app.config['MAIL_DEBUG'] = False
 app.config['MAIL_SUPPRESS_SEND'] = False
 
@@ -215,11 +215,11 @@ if __name__ == '__main__':
     host = os.environ.get('FLASK_HOST', '0.0.0.0')
     port = int(os.environ.get('FLASK_PORT', 5003))
     
-    print(f"🚀 Iniciando Microservicio de Notificaciones...")
-    print(f"📍 URL: http://{host}:{port}")
-    print(f"🔧 Debug: {debug_mode}")
-    print(f"📧 Cuenta de correo: lorenacardenasaguirre@gmail.com")
-    print(f"📧 Servidor de correo: {app.config['MAIL_SERVER']}:{app.config['MAIL_PORT']}")
-    print(f"⚠️  IMPORTANTE: Configura la contraseña de aplicación en MAIL_PASSWORD")
+    print(f" Iniciando Microservicio de Notificaciones...")
+    print(f" URL: http://{host}:{port}")
+    print(f" Debug: {debug_mode}")
+    print(f" Cuenta de correo: lorenacardenasaguirre@gmail.com")
+    print(f" Servidor de correo: {app.config['MAIL_SERVER']}:{app.config['MAIL_PORT']}")
+    print(f"  IMPORTANTE: Configura la contraseña de aplicación en MAIL_PASSWORD")
     
     app.run(debug=debug_mode, host=host, port=port)
