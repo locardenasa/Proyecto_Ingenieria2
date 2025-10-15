@@ -75,7 +75,7 @@ def send_notification():
     Endpoint para enviar notificaciones por correo electrónico
     Body JSON esperado:
     {
-        "to": "destinatario@ejemplo.com",
+        "to": "sebastianworks21@gmail.com",
         "subject": "Asunto del correo",
         "body": "Contenido del mensaje",
         "html": "<p>Contenido HTML opcional</p>"
@@ -150,7 +150,7 @@ def send_bulk_notifications():
     Endpoint para enviar notificaciones a múltiples destinatarios
     Body JSON esperado:
     {
-        "recipients": ["email1@ejemplo.com", "email2@ejemplo.com"],
+        "recipients": ["sebastianworks21@gmail.com", "locardenasa@unal.edu.co"],
         "subject": "Asunto del correo",
         "body": "Contenido del mensaje"
     }
