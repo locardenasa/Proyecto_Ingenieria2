@@ -4,6 +4,7 @@ from bson import ObjectId
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+from bson import ObjectId
 
 load_dotenv()
 
@@ -34,32 +35,49 @@ def log_message(action, details):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{timestamp}] {action}: {details}")
 
+# función para convertir ObjectId a string
+def serialize_doc(doc):
+    doc['_id'] = str(doc['_id'])
+    return doc
+
 # Rutas CRUD para productos
 @app.route('/products', methods=['GET'])
 def get_products():
     log_message("CONSULTA", "Obteniendo lista de todos los productos")
     products = list(products_collection.find())
+    
+    # Convertimos todos los ObjectId a string
+    serialized_products = [serialize_doc(p) for p in products]
+    
     response_data = {
         'message': 'Productos obtenidos exitosamente',
-        'count': len(products),
-        'data': products
+        'count': len(serialized_products),
+        'data': serialized_products
     }
-    log_message("CONSULTA_EXITOSA", f"Se encontraron {len(products)} productos")
+    log_message("CONSULTA_EXITOSA", f"Se encontraron {len(serialized_products)} productos")
     return jsonify(response_data)
 
 @app.route('/products/<int:product_id>', methods=['GET'])
 def get_product(product_id):
     log_message("CONSULTA_INDIVIDUAL", f"Buscando producto con ID: {product_id}")
     product = products_collection.find_one({'id': product_id})
+
     if product:
+        # Convertir ObjectId y cualquier otro valor no serializable
+        product['_id'] = str(product['_id'])
+        for key, value in product.items():
+            if isinstance(value, ObjectId):
+                product[key] = str(value)
+
         log_message("ENCONTRADO", f"Producto '{product.get('name', 'Sin nombre')}' encontrado")
         return jsonify({
             'message': 'Producto encontrado exitosamente',
             'data': product
-        })
+        }), 200
     else:
         log_message("NO_ENCONTRADO", f"Producto con ID {product_id} no existe")
         return jsonify({'message': 'Producto no encontrado'}), 404
+
 
 @app.route('/products', methods=['POST'])
 def create_product():
