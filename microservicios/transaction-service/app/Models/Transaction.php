@@ -10,12 +10,8 @@ class Transaction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'type',
-        'user_id',
-        'product_id', 
-        'quantity',
-        'amount',
-        'status',
-        'customer_email'
+        'descripcion',
+        'monto',
+        'tipo'
     ];
 }
