@@ -1,0 +1,142 @@
+services:
+  
+  ## Base de Datos
+  ## MongoDB
+  mongo:
+    image: mongo:6
+    container_name: inventario_mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=inventario_db
+    volumes:
+      - inventario_data:/data/db
+    ports:
+      - "27020:27017"
+    networks:
+      - proyecto_net
+
+  ## MYSQL Auditoría
+  auditoria_mysql:
+    image: mysql:8
+    container_name: auditoria_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: auditoria_db
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./auditoria/mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proyecto_net
+
+  ## Microservicios
+
+  ## Servicio de Inventarios
+  inventarios:
+    build:
+      context: ./inventario
+      dockerfile: Dockerfile
+    container_name: inventario_service
+    restart: always
+    environment:
+      - FLASK_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/inventario_db
+    ports:
+      - "5001:5000"
+    depends_on:
+      - mongo
+    networks:
+      - proyecto_net
+
+  ## Servicio de Notificaciones
+  notificaciones:
+    build: ./notificaciones
+    container_name: notificaciones_service
+    restart: always
+    ports:
+      - "5003:5003"
+    environment:
+      FLASK_DEBUG: "False"
+      FLASK_HOST: "0.0.0.0"
+      FLASK_PORT: "5003"
+      MAIL_USERNAME: "lorenacardenasaguirre@gmail.com"
+      MAIL_PASSWORD: "xrqs rebe nmag zwfq"
+    networks:
+      - proyecto_net
+
+  ## Servicio de Reportes
+  reportes:
+    build: ./reportes
+    container_name: reportes_service
+    restart: always
+    ports:
+      - "5002:5002"
+    depends_on:
+      - mongo
+    environment:
+      MONGO_URI: "mongodb://mongo:27017/inventario_db"
+    networks:
+      - proyecto_net
+
+  ## Servicio de Auditoría
+  auditoria:
+    build:
+      context: ./auditoria
+      dockerfile: Dockerfile
+    container_name: auditoria_service
+    restart: always
+    env_file:
+      - ./auditoria/.env
+    environment:
+      - DB_HOST=auditoria_mysql
+      - DB_USER=${DB_USER:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - DB_NAME=${DB_NAME:-auditoria_db}
+      - PORT=${PORT:-5000}
+    ports:
+      - "7000:5000"
+    volumes:
+      - ./auditoria:/app
+      - ./auditoria/logs:/var/log/auditoria
+    depends_on:
+      auditoria_mysql:
+        condition: service_healthy
+    networks:
+      - proyecto_net
+  ## Servicio autenticacion
+  autenticacion:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autenticacion
+    env_file: .env
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - PORT=${PORT:-8080}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${DB_DATABASE:-authdb}
+      - DB_USERNAME=${DB_USERNAME:-auth}
+      - DB_PASSWORD=${DB_PASSWORD:-authpwd}
+    ports:
+      - "${PORT:-8080}:80"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - proyecto_net
+
+networks:
+  proyecto_net:
+
+volumes:
+  inventario_data:
+  transacciones_data:
+  auditoria_data:
