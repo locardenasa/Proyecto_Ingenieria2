@@ -1,0 +1,103 @@
+from flask import Flask, jsonify, request, send_file
+from pymongo import MongoClient
+from datetime import datetime
+import pandas as pd
+from fpdf import FPDF
+import io
+import os
+
+app = Flask(__name__)
+
+# -------------------------------
+# Conexión a MongoDB
+# -------------------------------
+mongo_client = MongoClient("mongodb://localhost:27017/")
+mongo_db = mongo_client["inventario_db"]
+productos_collection = mongo_db["products"]
+
+
+# -------------------------------
+# ENDPOINT: Generar Reporte de Productos
+# -------------------------------
+@app.route("/reporte/productos", methods=["GET"])
+def reporte_productos():
+    formato = request.args.get("formato", "json")  # json, excel, pdf
+    filtro_nombre = request.args.get("nombre")     # filtro opcional
+
+    # Construir filtro dinámico
+    filtro = {}
+    if filtro_nombre:
+        filtro["nombre"] = {"$regex": filtro_nombre, "$options": "i"}
+
+    # Obtener datos desde MongoDB
+    productos = list(productos_collection.find(filtro, {"_id": 0}))
+
+
+    # -------------------------------
+    # FORMATO JSON
+    # -------------------------------
+    if formato == "json":
+        return jsonify(productos)
+
+    # -------------------------------
+    # FORMATO EXCEL
+    # -------------------------------
+    elif formato == "excel":
+        if not productos:
+            return jsonify({"mensaje": "No hay productos para exportar"}), 404
+
+        df = pd.DataFrame(productos)
+
+        output = io.BytesIO()
+        df.to_excel(output, index=False)
+        output.seek(0)
+
+        nombre = f"reporte_productos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=nombre,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    # -------------------------------
+    # FORMATO PDF
+    # -------------------------------
+    elif formato == "pdf":
+        if not productos:
+            return jsonify({"mensaje": "No hay productos para exportar"}), 404
+
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", "B", 14)
+        pdf.cell(200, 10, "Reporte de Productos", ln=True, align="C")
+        pdf.ln(10)
+
+        pdf.set_font("Arial", size=11)
+        for p in productos:
+            linea = f"ID: {p.get('id', '')} | Nombre: {p.get('nombre', '')} | Cantidad: {p.get('cantidad', '')} | Precio: {p.get('precio', '')}"
+            pdf.multi_cell(0, 10, linea)
+            pdf.ln(2)
+
+        output = io.BytesIO()
+        pdf.output(output)
+        output.seek(0)
+
+        nombre = f"reporte_productos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=nombre,
+            mimetype="application/pdf"
+        )
+
+    else:
+        return jsonify({"error": "Formato no soportado"}), 400
+
+
+# -------------------------------
+# MAIN
+# -------------------------------
+if __name__ == "__main__":
+    os.makedirs("reportes", exist_ok=True)
+    app.run(debug=True, port=5002)

@@ -1,0 +1,4 @@
+﻿# Proyecto Ingeniería de Software II
+Aplicación de control de inventarios basada en arquitectura de microservicios.
+Repositorio oficial: https://github.com/locardenasa/Proyecto_Ingenieria2.git
+
